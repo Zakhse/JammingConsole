@@ -6,13 +6,13 @@ import java.util.*;
 
 enum Arrangement {VERTICAL, HORIZONTAL}
 
-public class KmerField {
+class KmerField {
     private Point getRandom(Set<Point> s) {
         int l = rnd.nextInt(s.size());
         int i = 0;
         for (Point p : s)
             if (i++ == l) return p;
-        return null;
+        return new Point();
     }
 
     private static Random rnd = new Random();
@@ -20,12 +20,15 @@ public class KmerField {
     private int size;
     private int kmerSize;
     private boolean generated = false;
+    private double filledSpace = 0.0;
 
-    public boolean isGenerated() {return generated;}
+    boolean isGenerated() {return generated;}
 
-    public int getSize() {return size;}
+    int getSize() {return size;}
 
-    public int getKmerSize() {return kmerSize;}
+    int getKmerSize() {return kmerSize;}
+
+    double getFilledSpace() {return filledSpace;}
 
     @Override
     public String toString() {
@@ -46,7 +49,7 @@ public class KmerField {
 
     private kmerCell[][] field;
 
-    public void generateField(int size, int kmerSize) {
+    void generateField(int size, int kmerSize) {
         if (size < kmerSize) throw new IllegalArgumentException("Size field cannot be less than size of k-mers.");
 
         this.size = size;
@@ -74,8 +77,9 @@ public class KmerField {
             }
         }
 
+        int numberOfPlacedKmers = 0;
         while (!pointSetHorizontal.isEmpty() || !pointSetVertical.isEmpty()) {
-
+            numberOfPlacedKmers++;
             Arrangement chosenArrangement;
             if (pointSetHorizontal.isEmpty()) chosenArrangement = Arrangement.VERTICAL;
             else if (pointSetVertical.isEmpty()) chosenArrangement = Arrangement.HORIZONTAL;
@@ -94,6 +98,7 @@ public class KmerField {
             int Y = chosenPoint.getY();
             kmerCell kmerToPlace = new kmerCell(X, Y, chosenArrangement);
 
+            // Placing kmer
             if (chosenArrangement == Arrangement.HORIZONTAL)
                 for (int j = Y; j < Y + kmerSize; j++) {
                     field[X][j] = kmerToPlace;
@@ -102,6 +107,7 @@ public class KmerField {
                 for (int i = X; i < X + kmerSize; i++) {
                     field[i][Y] = kmerToPlace;
                 }
+
             if (chosenArrangement == Arrangement.HORIZONTAL) {
                 // Cleans set of point fo horizontal kmers
                 for (int i = Math.max(0, Y - kmerSize + 1); i <= Y + kmerSize - 1; i++)
@@ -125,6 +131,7 @@ public class KmerField {
             }
         }
         generated = true;
+        filledSpace = numberOfPlacedKmers * kmerSize / (double) (size * size);
     } // generation
 
     private class kmerCell {
@@ -132,19 +139,19 @@ public class KmerField {
         private Arrangement arrangement;
         Filling filling;
 
-        public int getHeadX() {return point.getX();}
+        int getHeadX() {return point.getX();}
 
-        public int getHeadY() {return point.getY();}
+        int getHeadY() {return point.getY();}
 
-        public Arrangement getArrangement() {return arrangement;}
+        Arrangement getArrangement() {return arrangement;}
 
-        public kmerCell(int headX, int headY, Arrangement arrangement) {
+        kmerCell(int headX, int headY, Arrangement arrangement) {
             this.arrangement = arrangement;
             point = new Point(headX, headY);
             filling = Filling.FULL;
         }
 
-        public kmerCell() {
+        kmerCell() {
             point = new Point();
             filling = Filling.EMPTY;
         }

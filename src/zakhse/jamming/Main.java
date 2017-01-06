@@ -1,61 +1,35 @@
 package zakhse.jamming;
 
-import zakhse.Point;
-
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
+    static AtomicInteger step = new AtomicInteger(0);
 
     public static void main(String[] args) {
-        int repeats = 10;
-
-        Queue<FieldGenerator> queue = new ConcurrentLinkedQueue<>();
-        for (int i = 0; i < 10; i++) {
-            queue.add(new FieldGenerator(200, 10, queue));
-        }
+        int repeats = 200;
+        int numberOfThreads = 4;
 
         long time1 = System.currentTimeMillis();
 
-        synchronized (queue) {
-            while (repeats != 0) {
-                queue.poll().start();
-                repeats--;
-                if (queue.isEmpty()) try {queue.wait();} catch (InterruptedException ignored) {}
-            }
+        //region Running a series of experiments
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numberOfThreads);
+        List<Future<Double>> resultList = new LinkedList<>();
+        for (int i = 0; i < repeats; i++) {
+            resultList.add(executor.submit(new FieldGenerator(300, 10)));
         }
+        double counter = 0.0;
+        for (Future<Double> future : resultList) {
+            try {counter += future.get();} catch (InterruptedException | ExecutionException e) {e.printStackTrace();}
+        }
+        executor.shutdown();
+        System.out.printf("Average filled part = %.3f\n", counter / repeats);
+        //endregion
 
         long time2 = System.currentTimeMillis();
-        System.out.println("Elapsed seconds: " + (time2 - time1) / 1000);
+        System.out.printf("Elapsed seconds: %.2f\n",(time2 - time1) / 1000.0);
     }
 }
 
-class FieldGenerator extends Thread {
-
-    private int size;
-    private int kmerSize;
-    //private int repeats;
-    final private Queue<FieldGenerator> queue;
-
-    FieldGenerator(int size, int kmerSize, /*int repeats,*/ Queue<FieldGenerator> queue) {
-        this.size = size;
-        this.kmerSize = kmerSize;
-        //this.repeats = repeats;
-        this.queue = queue;
-    }
-
-    @Override
-    public void run() {
-        KmerField field = new KmerField();
-        //for (int i = 0; i < repeats; i++) {
-        field.generateField(size, kmerSize);
-        System.out.println('-');
-        //}
-        synchronized (queue) {
-            queue.add(new FieldGenerator(size, kmerSize, queue));
-            queue.notifyAll();
-        }
-    }
-}

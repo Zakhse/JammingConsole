@@ -62,22 +62,23 @@ class KmerField {
                 field[i][j] = new kmerCell();
         }
 
-
+        // Generating set of point where heads of kmers can be placed (two ones for horizontal and vertical kmers separated)
         Set<Point> pointSetHorizontal = new HashSet<>();
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size - kmerSize + 1; j++) {
                 pointSetHorizontal.add(new Point(i, j));
             }
         }
-
         Set<Point> pointSetVertical = new HashSet<>();
         for (int i = 0; i < size - kmerSize + 1; i++) {
+
             for (int j = 0; j < size; j++) {
                 pointSetVertical.add(new Point(i, j));
             }
         }
 
         int numberOfPlacedKmers = 0;
+        // Filling a lattice by kmers
         while (!pointSetHorizontal.isEmpty() || !pointSetVertical.isEmpty()) {
             numberOfPlacedKmers++;
             Arrangement chosenArrangement;
@@ -98,7 +99,7 @@ class KmerField {
             int Y = chosenPoint.getY();
             kmerCell kmerToPlace = new kmerCell(X, Y, chosenArrangement);
 
-            // Placing kmer
+            // Placing the kmer of this itaration
             if (chosenArrangement == Arrangement.HORIZONTAL)
                 for (int j = Y; j < Y + kmerSize; j++) {
                     field[X][j] = kmerToPlace;
@@ -108,8 +109,9 @@ class KmerField {
                     field[i][Y] = kmerToPlace;
                 }
 
+            // Cleaning points that can't have a head of any kmers now
             if (chosenArrangement == Arrangement.HORIZONTAL) {
-                // Cleans set of point fo horizontal kmers
+                // Cleans set of point for horizontal kmers
                 for (int i = Math.max(0, Y - kmerSize + 1); i <= Y + kmerSize - 1; i++)
                     pointSetHorizontal.remove(new Point(X, i));
 
@@ -129,7 +131,8 @@ class KmerField {
                         pointSetHorizontal.remove(new Point(i, j));
 
             }
-        }
+        } // while cycle
+
         generated = true;
         filledSpace = numberOfPlacedKmers * kmerSize / (double) (size * size);
     } // generation

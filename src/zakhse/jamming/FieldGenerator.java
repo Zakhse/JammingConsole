@@ -33,7 +33,6 @@ class FieldGenerator implements Callable<Double> {
     public Double call() throws Exception {
         KmerField field = new KmerField();
         field.generateField(size, kmerSize);
-        System.out.printf("Step: " + Main.step.incrementAndGet() + "; Filled space = %.3f\n", field.getFilledSpace());
         return field.getFilledSpace();
     }
 }
